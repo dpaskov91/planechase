@@ -7,15 +7,19 @@
 // client-side/browser use of this API (CORS enabled) — see
 // https://scryfall.com/docs/api for the fair-use request policy.
 
+// Scryfall gives both Plane and Phenomenon cards the single layout
+// value "planar" (the same way Archenemy schemes all share "scheme").
+// We tell them apart by type_line instead: Phenomenon cards have no
+// subtype ("Phenomenon"), Planes always have one ("Plane — Dominaria").
 const SEARCH_URL =
   "https://api.scryfall.com/cards/search?" +
   new URLSearchParams({
-    q: "(layout:plane or layout:phenomenon) -is:digital",
+    q: "layout:planar -is:digital",
     unique: "cards",
     order: "name",
   }).toString();
 
-const CACHE_KEY = "planechase.cardCache.v1";
+const CACHE_KEY = "planechase.cardCache.v2";
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function normalizeCard(raw) {
@@ -27,7 +31,7 @@ function normalizeCard(raw) {
   return {
     id: raw.id,
     name: raw.name,
-    layout: raw.layout, // "plane" | "phenomenon"
+    layout: raw.type_line?.startsWith("Phenomenon") ? "phenomenon" : "plane",
     typeLine: raw.type_line ?? "",
     oracleText: raw.oracle_text ?? face.oracle_text ?? "",
     set: raw.set,
