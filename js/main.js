@@ -20,6 +20,7 @@ function showView(name) {
     btn.classList.toggle("is-active", btn.dataset.view === name);
   }
   location.hash = name;
+  window.scrollTo(0, 0);
 }
 
 for (const btn of tabButtons) {

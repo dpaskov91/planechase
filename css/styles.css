@@ -321,37 +321,57 @@ img { max-width: 100%; display: block; }
 .stage-controls { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; width: 100%; }
 .die-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
 
-/* Planar die — 3D cube styled after the real black plastic die:
-   solid black faces, rounded/beveled edges, white engraved symbols. */
-.planar-die { width: 100px; height: 100px; perspective: 640px; }
+/* Planar die — 3D cube styled after premium resin planar dice: a
+   glossy cosmic/marbled body flecked with glitter, with the actual
+   Magic symbols engraved in color — the spiky Planeswalker icon for
+   the planeswalk result, the twin-spiral Chaos icon for chaos. */
+.planar-die { --die-size: 100px; width: var(--die-size); height: var(--die-size); perspective: 640px; }
 .die-cube {
   width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
   transform: rotateX(-24deg) rotateY(35deg);
   transition: transform 1.1s cubic-bezier(.16,.85,.24,1);
 }
 .die-face {
-  position: absolute; inset: 0; width: 100px; height: 100px;
-  background: radial-gradient(circle at 32% 26%, #2c2c31, #131316 65%, #0a0a0c);
-  border: 1px solid #000;
+  position: absolute; inset: 0; width: var(--die-size); height: var(--die-size);
+  background:
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,.22), transparent 32%),
+    radial-gradient(circle at 78% 82%, rgba(139,92,246,.45), transparent 55%),
+    radial-gradient(circle at 15% 80%, rgba(6,182,212,.30), transparent 50%),
+    linear-gradient(155deg, #241c40, #100c22 65%, #0a0816);
+  border: 1px solid rgba(255,255,255,.10);
   border-radius: 20px;
   display: flex; align-items: center; justify-content: center;
   box-shadow:
-    inset 0 2px 3px rgba(255,255,255,.14),
-    inset 0 -10px 16px rgba(0,0,0,.55),
-    inset 0 0 0 1px rgba(255,255,255,.03);
+    inset 0 2px 3px rgba(255,255,255,.22),
+    inset 0 -10px 18px rgba(0,0,0,.5),
+    inset 0 0 0 1px rgba(255,255,255,.04);
 }
-.die-face--front  { transform: translateZ(50px); }
-.die-face--back   { transform: rotateY(180deg) translateZ(50px); }
-.die-face--right  { transform: rotateY(90deg) translateZ(50px); }
-.die-face--left   { transform: rotateY(-90deg) translateZ(50px); }
-.die-face--top    { transform: rotateX(90deg) translateZ(50px); }
-.die-face--bottom { transform: rotateX(-90deg) translateZ(50px); }
+.die-face::before {
+  /* subtle glitter fleck */
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background-image:
+    radial-gradient(circle, #fff 0 1px, transparent 1.2px),
+    radial-gradient(circle, #fff 0 1px, transparent 1.2px),
+    radial-gradient(circle, #fff 0 1px, transparent 1.2px),
+    radial-gradient(circle, #fff 0 1px, transparent 1.2px),
+    radial-gradient(circle, #fff 0 1px, transparent 1.2px),
+    radial-gradient(circle, #fff 0 1px, transparent 1.2px);
+  background-size: 100% 100%;
+  background-position: 18% 30%, 82% 20%, 65% 72%, 30% 85%, 88% 55%, 10% 60%;
+  background-repeat: no-repeat;
+  opacity: .35;
+}
+.die-face--front  { transform: translateZ(calc(var(--die-size) / 2)); }
+.die-face--back   { transform: rotateY(180deg) translateZ(calc(var(--die-size) / 2)); }
+.die-face--right  { transform: rotateY(90deg) translateZ(calc(var(--die-size) / 2)); }
+.die-face--left   { transform: rotateY(-90deg) translateZ(calc(var(--die-size) / 2)); }
+.die-face--top    { transform: rotateX(90deg) translateZ(calc(var(--die-size) / 2)); }
+.die-face--bottom { transform: rotateX(-90deg) translateZ(calc(var(--die-size) / 2)); }
 
-.die-symbol { width: 52%; height: 52%; }
-.die-symbol polygon,
-.die-symbol path {
-  fill: #f5f6fa;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.5));
+.die-symbol {
+  width: 54%; height: 54%; position: relative;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.6));
 }
 .die-face[data-face="blank"] .die-symbol { opacity: 0; }
 
@@ -419,6 +439,55 @@ img { max-width: 100%; display: block; }
   .app-header { padding: 0.7rem 1rem; }
   .brand h1 { font-size: 1.1rem; }
   .tab-btn { padding: 0.45rem 0.85rem; font-size: 0.8rem; }
+
+  /* Portrait phones: trim the chrome around the active plane so the
+     card reads as the dominant element instead of a small tile lost
+     between a tall header and a stack of controls. */
+  #main { padding-top: 0.85rem; }
+  .game-stage { gap: 0.85rem; }
+  .plane-stand { padding: 0; }
+  .stage-controls { gap: 0.85rem; }
+  .planar-die { --die-size: 88px; }
+  #planeswalk-btn { padding: 0.8rem 1.8rem; font-size: 1rem; }
+}
+
+/* Landscape phones: the vertical stack (card, then planeswalk button,
+   then die below that) doesn't fit a short viewport without scrolling
+   away from the card mid-game. Switch to a side-by-side layout — the
+   plane sized to the available height on the left, the planeswalk
+   button and die within reach right next to it. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .app-header { padding: 0.3rem 1rem; }
+  #main { padding-top: 0.4rem; padding-bottom: 0.5rem; }
+
+  .game-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "topbar   topbar"
+      "stand    controls"
+      "banner   banner";
+    align-items: center;
+    column-gap: 1.25rem;
+    row-gap: 0.35rem;
+  }
+  .stage-top-bar { grid-area: topbar; }
+  .plane-stand { grid-area: stand; padding: 0; justify-content: flex-end; perspective: 1000px; }
+  .phenomenon-banner { grid-area: banner; width: 100%; }
+  .stage-controls { grid-area: controls; gap: 0.6rem; width: auto; }
+
+  .active-plane {
+    width: auto;
+    height: min(58vh, 280px);
+    max-width: 54vw;
+  }
+
+  .deck-pill { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+  .stage-actions .btn { padding: 0.3rem 0.6rem; font-size: 0.72rem; }
+
+  .planar-die { --die-size: 64px; }
+  #planeswalk-btn { padding: 0.55rem 1.2rem; font-size: 0.85rem; }
+  .die-wrap { gap: 0.35rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -96,6 +96,7 @@ export function initGame(cardsById, { onEditPool }) {
       store.setDeck(deck);
       renderDeckCount();
       preloadUpcomingPlanes();
+      scrollStageIntoView();
       return;
     }
 
@@ -107,6 +108,15 @@ export function initGame(cardsById, { onEditPool }) {
     renderDeckCount();
     updateControls();
     preloadUpcomingPlanes();
+    scrollStageIntoView();
+  }
+
+  // On cramped landscape phones, resolving a Phenomenon banner can
+  // scroll the page (bringing "Resolve & Continue" into view); snap
+  // back so the newly-revealed plane and its controls are visible
+  // together without the player having to scroll manually.
+  function scrollStageIntoView() {
+    document.querySelector(".game-stage")?.scrollIntoView({ block: "nearest" });
   }
 
   // Warms the browser's image cache for the next couple of Plane cards
