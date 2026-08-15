@@ -45,6 +45,9 @@ export function initPicker(allCards, { onStartGame }) {
   });
 
   document.getElementById("select-all-btn").addEventListener("click", () => {
+    // Replace, not merge — otherwise a filtered "Select All" would be a
+    // no-op after selecting everything once with no filter applied.
+    selected.clear();
     visibleCards().forEach((c) => selected.add(c.id));
     persistAndRefresh();
   });
