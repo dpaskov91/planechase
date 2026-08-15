@@ -279,6 +279,7 @@ img { max-width: 100%; display: block; }
   position: relative;
   box-shadow: var(--shadow-soft), 0 0 60px rgba(139,92,246,.15);
 }
+.active-plane:has(img) { cursor: pointer; }
 .active-plane img {
   position: absolute;
   top: 50%;
@@ -299,13 +300,12 @@ img { max-width: 100%; display: block; }
   from { opacity: 0; transform: scale(.92) rotateY(8deg); filter: blur(6px); }
   to { opacity: 1; transform: none; filter: blur(0); }
 }
-.active-plane-caption {
-  position: absolute; left: 0; right: 0; bottom: 0; padding: 0.8rem 1rem;
-  background: linear-gradient(0deg, rgba(0,0,0,.82), transparent);
-  display: flex; align-items: baseline; justify-content: space-between; gap: .75rem;
+.active-plane-zoom {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(6,7,20,.6); backdrop-filter: blur(4px);
+  font-size: 1rem; line-height: 1;
 }
-.active-plane-caption h3 { font-size: 1.05rem; }
-.active-plane-caption button { font-size: 0.72rem; }
+.active-plane-zoom:hover { background: rgba(6,7,20,.8); }
 
 .phenomenon-banner[hidden] { display: none; }
 .phenomenon-banner {
@@ -472,14 +472,14 @@ img { max-width: 100%; display: block; }
     row-gap: 0.35rem;
   }
   .stage-top-bar { grid-area: topbar; }
-  .plane-stand { grid-area: stand; padding: 0; justify-content: flex-end; perspective: 1000px; }
+  .plane-stand { grid-area: stand; padding: 0; justify-content: center; perspective: 1000px; }
   .phenomenon-banner { grid-area: banner; width: 100%; }
   .stage-controls { grid-area: controls; gap: 0.6rem; width: auto; }
 
   .active-plane {
     width: auto;
-    height: min(58vh, 280px);
-    max-width: 54vw;
+    height: min(58vh, 320px);
+    max-width: 58vw;
   }
 
   .deck-pill { padding: 0.3rem 0.6rem; font-size: 0.75rem; }

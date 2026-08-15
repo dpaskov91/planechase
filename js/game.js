@@ -168,6 +168,7 @@ export function initGame(cardsById, { onEditPool }) {
   function renderActivePlane() {
     activePlaneEl.replaceChildren();
     activePlaneEl.classList.remove("is-entering");
+    activePlaneEl.onclick = null;
     const card = current ? cardsById.get(current) : null;
 
     if (!card) {
@@ -180,16 +181,25 @@ export function initGame(cardsById, { onEditPool }) {
       return;
     }
 
+    // Scryfall's card image is the whole printed card — name, art, type
+    // line and rules text together — so it needs no redundant caption
+    // bar. Just make the card itself (plus a small corner affordance)
+    // open the full-size lightbox.
     const img = el("img", { src: card.image, alt: card.name });
-    const caption = el("div", { class: "active-plane-caption" }, [
-      el("h3", {}, card.name),
-      el(
-        "button",
-        { class: "btn btn-ghost btn-sm", onClick: () => openLightbox(card) },
-        "Full text"
-      ),
-    ]);
-    activePlaneEl.append(img, caption);
+    const zoomBtn = el(
+      "button",
+      {
+        class: "icon-btn active-plane-zoom",
+        "aria-label": `View ${card.name} full size`,
+        onClick: (e) => {
+          e.stopPropagation();
+          openLightbox(card);
+        },
+      },
+      "⤢"
+    );
+    activePlaneEl.append(img, zoomBtn);
+    activePlaneEl.onclick = () => openLightbox(card);
     // restart the entrance animation
     void activePlaneEl.offsetWidth;
     activePlaneEl.classList.add("is-entering");
