@@ -57,7 +57,7 @@ js/
 - **Homebrew/extra cards** — add objects to the array returned by
   `getCustomCards()` in `js/scryfall.js`. They're merged into the pool
   alongside Scryfall's data using the same shape:
-  `{ id, name, layout, typeLine, oracleText, set, setName, image }`.
+  `{ id, name, layout, typeLine, oracleText, set, setName, imageSmall, image, imageLarge }`.
 - **New views** — the app is a simple two-view tab switcher in `main.js`
   (`showView`). Add a new `<section class="view">`, a tab button, and a
   view key to extend it (e.g. an Archenemy scheme deck, since Scryfall

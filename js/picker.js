@@ -123,7 +123,7 @@ export function initPicker(allCards, { onStartGame }) {
         tabindex: "0",
       },
       [
-        el("img", { src: card.image, alt: card.name, loading: "lazy" }),
+        el("img", { src: card.imageSmall, alt: card.name, loading: "lazy" }),
         el("div", { class: "card-tile-check" }, isSelected ? "✓" : ""),
         el("div", { class: "card-tile-zoom" }, "Tap to view"),
         el("div", { class: "card-tile-label" }, [

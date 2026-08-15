@@ -28,6 +28,7 @@ export function initGame(cardsById, { onEditPool }) {
   renderDeckCount();
   renderHistory();
   updateControls();
+  preloadUpcomingPlanes();
 
   planeswalkBtn.addEventListener("click", () => planeswalk());
   rollDieBtn.addEventListener("click", () => handleRoll());
@@ -94,6 +95,7 @@ export function initGame(cardsById, { onEditPool }) {
       logHistory(card, "phenomenon");
       store.setDeck(deck);
       renderDeckCount();
+      preloadUpcomingPlanes();
       return;
     }
 
@@ -104,6 +106,21 @@ export function initGame(cardsById, { onEditPool }) {
     renderActivePlane();
     renderDeckCount();
     updateControls();
+    preloadUpcomingPlanes();
+  }
+
+  // Warms the browser's image cache for the next couple of Plane cards
+  // (the big hero image) so planeswalking feels instant instead of
+  // popping in while a fresh high-res image downloads.
+  function preloadUpcomingPlanes(count = 2) {
+    let found = 0;
+    for (const id of deck) {
+      const upcoming = cardsById.get(id);
+      if (!upcoming || upcoming.layout !== "plane") continue;
+      new Image().src = upcoming.image;
+      found++;
+      if (found >= count) break;
+    }
   }
 
   function continueThroughPhenomenon() {
@@ -184,7 +201,7 @@ export function initGame(cardsById, { onEditPool }) {
       historyList.append(
         el("li", {}, [
           card
-            ? el("img", { src: card.image, alt: "" })
+            ? el("img", { src: card.imageSmall, alt: "" })
             : el("span", {}, "🌀"),
           el("span", {}, entry.name),
           el("span", { class: "time" }, formatTime(entry.at)),

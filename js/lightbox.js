@@ -11,7 +11,7 @@ const backdrop = document.getElementById("lightbox-backdrop");
 const closeBtn = document.getElementById("lightbox-close");
 
 export function openLightbox(card) {
-  img.src = card.image;
+  img.src = card.imageLarge;
   img.alt = card.name;
   nameEl.textContent = card.name;
   typeEl.textContent = card.typeLine;

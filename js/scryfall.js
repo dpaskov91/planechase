@@ -19,14 +19,12 @@ const SEARCH_URL =
     order: "name",
   }).toString();
 
-const CACHE_KEY = "planechase.cardCache.v2";
+const CACHE_KEY = "planechase.cardCache.v3";
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function normalizeCard(raw) {
   const face = raw.image_uris ? raw : raw.card_faces?.[0] ?? raw;
-  const imageUris = face.image_uris ?? {};
-  const image =
-    imageUris.png || imageUris.large || imageUris.normal || imageUris.small || "";
+  const uris = face.image_uris ?? {};
 
   return {
     id: raw.id,
@@ -38,7 +36,12 @@ function normalizeCard(raw) {
     setName: raw.set_name,
     collectorNumber: raw.collector_number,
     releasedAt: raw.released_at,
-    image,
+    // Three sizes so tiny grid thumbnails don't pull full-resolution
+    // images: small for grid/history, normal for the hero display,
+    // large/png only when the player asks to zoom in.
+    imageSmall: uris.small || uris.normal || uris.large || uris.png || "",
+    image: uris.normal || uris.large || uris.png || uris.small || "",
+    imageLarge: uris.large || uris.png || uris.normal || uris.small || "",
     scryfallUri: raw.scryfall_uri,
   };
 }
