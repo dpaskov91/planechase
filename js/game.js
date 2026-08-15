@@ -90,11 +90,13 @@ export function initGame(cardsById, { onEditPool }) {
 
     if (card.layout === "phenomenon") {
       pendingPhenomenon = card;
-      phenomenonText.textContent = `${card.name} — ${card.oracleText}`;
+      phenomenonText.textContent = card.oracleText;
       phenomenonBanner.hidden = false;
       logHistory(card, "phenomenon");
       store.setDeck(deck);
+      renderActivePlane();
       renderDeckCount();
+      updateControls();
       preloadUpcomingPlanes();
       scrollStageIntoView();
       return;
@@ -167,9 +169,13 @@ export function initGame(cardsById, { onEditPool }) {
 
   function renderActivePlane() {
     activePlaneEl.replaceChildren();
-    activePlaneEl.classList.remove("is-entering");
+    activePlaneEl.classList.remove("is-entering", "is-phenomenon");
     activePlaneEl.onclick = null;
-    const card = current ? cardsById.get(current) : null;
+
+    // A pending Phenomenon takes over the display until it's resolved —
+    // the player needs to actually see the card, not just a placeholder,
+    // while the plane it interrupted stays hidden underneath.
+    const card = pendingPhenomenon || (current ? cardsById.get(current) : null);
 
     if (!card) {
       activePlaneEl.append(
@@ -200,6 +206,7 @@ export function initGame(cardsById, { onEditPool }) {
     );
     activePlaneEl.append(img, zoomBtn);
     activePlaneEl.onclick = () => openLightbox(card);
+    activePlaneEl.classList.toggle("is-phenomenon", card === pendingPhenomenon);
     // restart the entrance animation
     void activePlaneEl.offsetWidth;
     activePlaneEl.classList.add("is-entering");
@@ -232,8 +239,12 @@ export function initGame(cardsById, { onEditPool }) {
 
   function updateControls() {
     const hasDeck = deck.length > 0 || current;
-    planeswalkBtn.disabled = !hasDeck;
-    rollDieBtn.disabled = !current;
+    // Rule: rolling the planar die or manually planeswalking away is
+    // only legal while an actual Plane is active — not while a
+    // Phenomenon is sitting unresolved as the just-turned-up card.
+    const blocked = !!pendingPhenomenon;
+    planeswalkBtn.disabled = !hasDeck || blocked;
+    rollDieBtn.disabled = !current || blocked;
   }
 
   return { startNewGame };

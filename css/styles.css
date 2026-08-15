@@ -278,8 +278,13 @@ img { max-width: 100%; display: block; }
   overflow: hidden;
   position: relative;
   box-shadow: var(--shadow-soft), 0 0 60px rgba(139,92,246,.15);
+  transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
 }
 .active-plane:has(img) { cursor: pointer; }
+.active-plane.is-phenomenon {
+  border-color: rgba(245,158,11,.6);
+  box-shadow: var(--shadow-soft), 0 0 60px rgba(245,158,11,.25);
+}
 .active-plane img {
   position: absolute;
   top: 50%;
@@ -418,7 +423,13 @@ img { max-width: 100%; display: block; }
   object-fit: cover;
   transform: translate(-50%, -50%) rotate(var(--plane-rotate));
 }
-.lightbox-info { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; overflow-y: auto; }
+.lightbox-info {
+  padding: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; overflow-y: auto;
+  /* Flex items default to min-height:auto (can't shrink below content),
+     which silently defeats overflow-y:auto and just clips the rest of
+     the card's text instead of scrolling to it. */
+  min-height: 0;
+}
 .lightbox-close { position: absolute; top: 10px; right: 10px; z-index: 2; }
 
 /* Toasts */
@@ -448,7 +459,6 @@ img { max-width: 100%; display: block; }
   .plane-stand { padding: 0; }
   .stage-controls { gap: 0.85rem; }
   .planar-die { --die-size: 88px; }
-  #planeswalk-btn { padding: 0.8rem 1.8rem; font-size: 1rem; }
 }
 
 /* Landscape phones: the vertical stack (card, then planeswalk button,
@@ -474,7 +484,14 @@ img { max-width: 100%; display: block; }
   .stage-top-bar { grid-area: topbar; }
   .plane-stand { grid-area: stand; padding: 0; justify-content: center; perspective: 1000px; }
   .phenomenon-banner { grid-area: banner; width: 100%; }
-  .stage-controls { grid-area: controls; gap: 0.6rem; width: auto; }
+  .stage-controls {
+    grid-area: controls;
+    gap: 0.6rem;
+    /* Fixed, not auto — otherwise the die-result text changing length
+       (e.g. "Chaos! Trigger this plane's chaos ability." appearing/
+       clearing) resizes this column and shoves the card sideways. */
+    width: 168px;
+  }
 
   .active-plane {
     width: auto;
@@ -486,8 +503,9 @@ img { max-width: 100%; display: block; }
   .stage-actions .btn { padding: 0.3rem 0.6rem; font-size: 0.72rem; }
 
   .planar-die { --die-size: 64px; }
-  #planeswalk-btn { padding: 0.55rem 1.2rem; font-size: 0.85rem; }
+  #roll-die-btn { padding: 0.55rem 1.2rem; font-size: 0.85rem; }
   .die-wrap { gap: 0.35rem; }
+  .die-result { font-size: 0.8rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
