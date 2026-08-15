@@ -115,10 +115,24 @@
               <div class="die-cube" id="die-cube">
                 <div class="die-face die-face--front"  data-face="blank"></div>
                 <div class="die-face die-face--back"   data-face="blank"></div>
-                <div class="die-face die-face--right"  data-face="planeswalk"></div>
-                <div class="die-face die-face--left"   data-face="planeswalk"></div>
+                <div class="die-face die-face--right"  data-face="planeswalk">
+                  <svg class="die-symbol" viewBox="0 0 100 100" aria-hidden="true">
+                    <path d="M50,50 A22,22 0 1 1 50,6 L50,50 Z" />
+                    <path d="M50,50 A22,22 0 1 1 50,6 L50,50 Z" transform="rotate(180 50 50)" />
+                  </svg>
+                </div>
+                <div class="die-face die-face--left"   data-face="planeswalk">
+                  <svg class="die-symbol" viewBox="0 0 100 100" aria-hidden="true">
+                    <path d="M50,50 A22,22 0 1 1 50,6 L50,50 Z" />
+                    <path d="M50,50 A22,22 0 1 1 50,6 L50,50 Z" transform="rotate(180 50 50)" />
+                  </svg>
+                </div>
                 <div class="die-face die-face--top"    data-face="blank"></div>
-                <div class="die-face die-face--bottom" data-face="chaos"></div>
+                <div class="die-face die-face--bottom" data-face="chaos">
+                  <svg class="die-symbol" viewBox="0 0 100 100" aria-hidden="true">
+                    <polygon points="50,8 56.12,35.22 79.70,20.30 64.78,43.88 92,50 64.78,56.12 79.70,79.70 56.12,64.78 50,92 43.88,64.78 20.30,79.70 35.22,56.12 8,50 35.22,43.88 20.30,20.30 43.88,35.22" />
+                  </svg>
+                </div>
               </div>
             </div>
             <button id="roll-die-btn" class="btn btn-secondary" type="button" disabled>Roll Planar Die</button>
