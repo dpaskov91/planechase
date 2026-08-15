@@ -1,6 +1,6 @@
-import { el, debounce, toast } from "./util.js";
-import { store } from "./state.js";
-import { openLightbox } from "./lightbox.js";
+import { el, debounce, toast } from "./util.js?v=__CACHE_BUST__";
+import { store } from "./state.js?v=__CACHE_BUST__";
+import { openLightbox } from "./lightbox.js?v=__CACHE_BUST__";
 
 const grid = document.getElementById("card-grid");
 const searchInput = document.getElementById("search-input");

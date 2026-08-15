@@ -24,6 +24,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache-bust static assets
+        # Stamps every "?v=__CACHE_BUST__" reference (the entry script/
+        # stylesheet in index.html, and every internal ES module import)
+        # with this commit's SHA, so browsers/CDN always fetch fresh
+        # files after a deploy instead of serving a stale cached copy.
+        run: |
+          grep -rl '__CACHE_BUST__' --include='*.html' --include='*.js' . \
+            | xargs sed -i "s/__CACHE_BUST__/${GITHUB_SHA}/g"
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

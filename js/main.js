@@ -1,8 +1,8 @@
-import { loadPlanechaseCards } from "./scryfall.js";
-import { store } from "./state.js";
-import { initPicker } from "./picker.js";
-import { initGame } from "./game.js";
-import { toast } from "./util.js";
+import { loadPlanechaseCards } from "./scryfall.js?v=__CACHE_BUST__";
+import { store } from "./state.js?v=__CACHE_BUST__";
+import { initPicker } from "./picker.js?v=__CACHE_BUST__";
+import { initGame } from "./game.js?v=__CACHE_BUST__";
+import { toast } from "./util.js?v=__CACHE_BUST__";
 
 const tabButtons = document.querySelectorAll(".tab-btn");
 const views = {
