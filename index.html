@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Planechase</title>
+<meta name="description" content="Play Magic: The Gathering Planechase in your browser — pick your planar deck, shuffle, planeswalk, and roll the planar die." />
+<meta name="theme-color" content="#0b0e1a" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="bg-field" aria-hidden="true"></div>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <h1>Planechase</h1>
+  </div>
+  <nav class="view-tabs" aria-label="Views">
+    <button class="tab-btn is-active" data-view="picker" type="button">Deck Builder</button>
+    <button class="tab-btn" data-view="game" type="button">Game</button>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ===================== PICKER VIEW ===================== -->
+  <section id="view-picker" class="view is-active" aria-labelledby="picker-heading">
+    <div class="view-head">
+      <div>
+        <h2 id="picker-heading">Build Your Planar Deck</h2>
+        <p class="muted">Pick the planes &amp; phenomena you want in play. Card data loads live from Scryfall.</p>
+      </div>
+      <div class="picker-summary">
+        <span id="selection-count">0</span> selected
+      </div>
+    </div>
+
+    <div class="picker-toolbar">
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search-input" type="search" placeholder="Search name or rules text…" autocomplete="off" />
+      </div>
+
+      <div class="filter-group" role="group" aria-label="Card type filter">
+        <button class="chip is-active" data-type-filter="all" type="button">All</button>
+        <button class="chip" data-type-filter="plane" type="button">Planes</button>
+        <button class="chip" data-type-filter="phenomenon" type="button">Phenomena</button>
+      </div>
+
+      <select id="set-filter" aria-label="Filter by set">
+        <option value="all">All sets</option>
+      </select>
+
+      <div class="toolbar-actions">
+        <button id="select-all-btn" class="btn btn-ghost" type="button">Select All</button>
+        <button id="select-none-btn" class="btn btn-ghost" type="button">Clear</button>
+        <button id="select-random-btn" class="btn btn-ghost" type="button">Random 10</button>
+      </div>
+    </div>
+
+    <div id="picker-status" class="status-banner" hidden></div>
+
+    <div id="card-grid" class="card-grid" aria-live="polite"></div>
+
+    <div class="picker-footer">
+      <button id="start-game-btn" class="btn btn-primary btn-lg" type="button" disabled>
+        Start Game <span id="start-game-count">(0 cards)</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== GAME VIEW ===================== -->
+  <section id="view-game" class="view" aria-labelledby="game-heading">
+    <div class="game-layout">
+
+      <div class="game-stage">
+        <h2 id="game-heading" class="sr-only">Active Game</h2>
+
+        <div class="stage-top-bar">
+          <div class="deck-pill" title="Cards remaining in the planar deck">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="13" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 3v18M12 3v18" stroke="currentColor" stroke-width="1.2" opacity=".5"/></svg>
+            <span id="deck-count">0</span> in deck
+          </div>
+          <div class="stage-actions">
+            <button id="history-btn" class="btn btn-ghost btn-sm" type="button">History</button>
+            <button id="new-pool-btn" class="btn btn-ghost btn-sm" type="button">Edit Deck</button>
+            <button id="reset-game-btn" class="btn btn-ghost btn-sm" type="button">Reshuffle &amp; Restart</button>
+          </div>
+        </div>
+
+        <div class="plane-stand">
+          <div id="active-plane" class="active-plane">
+            <div class="active-plane-empty">
+              <p>No active plane yet.</p>
+              <p class="muted">Build a deck, then planeswalk to begin.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="phenomenon-banner" id="phenomenon-banner" hidden>
+          <strong>Phenomenon!</strong>
+          <span id="phenomenon-text"></span>
+          <button id="phenomenon-ack-btn" class="btn btn-primary btn-sm" type="button">Resolve &amp; Continue</button>
+        </div>
+
+        <div class="stage-controls">
+          <button id="planeswalk-btn" class="btn btn-primary btn-xl" type="button" disabled>
+            Planeswalk
+          </button>
+
+          <div class="die-wrap">
+            <div id="planar-die" class="planar-die" role="img" aria-label="Planar die">
+              <div class="die-cube" id="die-cube">
+                <div class="die-face die-face--front"  data-face="blank"></div>
+                <div class="die-face die-face--back"   data-face="blank"></div>
+                <div class="die-face die-face--right"  data-face="planeswalk"></div>
+                <div class="die-face die-face--left"   data-face="planeswalk"></div>
+                <div class="die-face die-face--top"    data-face="blank"></div>
+                <div class="die-face die-face--bottom" data-face="chaos"></div>
+              </div>
+            </div>
+            <button id="roll-die-btn" class="btn btn-secondary" type="button" disabled>Roll Planar Die</button>
+            <div id="die-result" class="die-result" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside id="history-panel" class="history-panel" hidden aria-label="Plane history">
+        <div class="history-panel-head">
+          <h3>History</h3>
+          <button id="history-close-btn" class="icon-btn" type="button" aria-label="Close history">✕</button>
+        </div>
+        <ol id="history-list" class="history-list"></ol>
+      </aside>
+
+    </div>
+  </section>
+
+</main>
+
+<div id="card-lightbox" class="lightbox" hidden>
+  <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+  <div class="lightbox-card">
+    <button class="icon-btn lightbox-close" id="lightbox-close" type="button" aria-label="Close">✕</button>
+    <img id="lightbox-img" alt="" />
+    <div class="lightbox-info">
+      <h3 id="lightbox-name"></h3>
+      <p id="lightbox-type" class="muted"></p>
+      <p id="lightbox-text"></p>
+      <p id="lightbox-set" class="muted small"></p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+<footer class="app-footer">
+  <p>
+    Fan-made tool, unofficial &amp; unaffiliated with Wizards of the Coast. Card data &amp; images via
+    <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.
+    Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
+  </p>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
