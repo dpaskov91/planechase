@@ -431,11 +431,11 @@ img { max-width: 100%; display: block; }
    the art gets the same 7:5 frame + rotation treatment as the active
    plane display instead of a portrait side column. Sized and centered
    independently of the (now width-flexible) card: never taller than
-   ~55vh, so the info panel below always keeps real, scrollable room
-   on short/landscape screens. */
+   ~68vh, leaving just enough room below for the info panel to always
+   have some real, scrollable height on short/landscape screens. */
 .lightbox-art {
   position: relative;
-  width: min(100%, calc(55vh * 7 / 5));
+  width: min(100%, calc(68vh * 7 / 5));
   /* aspect-ratio, not the padding-top(%) hack — percentage padding
      resolves against the *containing block's* width, not this
      element's own width, which only coincidentally worked before
