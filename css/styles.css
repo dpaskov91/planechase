@@ -414,8 +414,11 @@ img { max-width: 100%; display: block; }
      short/landscape screen a wide card produces art taller than the
      whole 90vh budget, leaving nothing for the text. Capping width by
      vh too keeps the art (and therefore the whole card) within budget,
-     leaving genuine room for the info panel to scroll. */
-  width: min(620px, 90vw, 63vh);
+     leaving genuine room for the info panel to scroll. The 100% term
+     (not a vw one) lets the card go edge-to-edge on mobile — sized
+     against .lightbox's own padding below — while 620px keeps it from
+     ballooning on desktop. */
+  width: min(620px, 63vh, 100%);
   max-height: 90vh;
   display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-soft);
   animation: fade-up .3s var(--ease);
@@ -437,7 +440,17 @@ img { max-width: 100%; display: block; }
      the card's text instead of scrolling to it. */
   min-height: 0;
 }
-.lightbox-close { position: absolute; top: 10px; right: 10px; z-index: 2; }
+/* Anchored to the full-screen overlay, not the card — sitting inside
+   the card meant its rounded corner (overflow:hidden) clipped the
+   button's own outer edge, and it would've scrolled away with
+   .lightbox-info's content instead of staying reachable. */
+.lightbox-close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  right: calc(env(safe-area-inset-right, 0px) + 1rem);
+  z-index: 3;
+  background: rgba(6,7,20,.7); backdrop-filter: blur(4px);
+}
 
 /* Toasts */
 .toast-root { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
@@ -457,6 +470,11 @@ img { max-width: 100%; display: block; }
   .app-header { padding: 0.7rem 1rem; }
   .brand h1 { font-size: 1.1rem; }
   .tab-btn { padding: 0.45rem 0.85rem; font-size: 0.8rem; }
+
+  /* Let the lightbox card go nearly edge-to-edge instead of floating
+     as a narrow island with wasted space on both sides. */
+  .lightbox { padding: 0.5rem; }
+  .lightbox-card { border-radius: var(--radius-md); }
 
   /* Portrait phones: trim the chrome around the active plane so the
      card reads as the dominant element instead of a small tile lost
