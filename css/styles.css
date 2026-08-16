@@ -338,7 +338,7 @@ img { max-width: 100%; display: block; }
 }
 
 .stage-controls { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; width: 100%; }
-.die-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+.die-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; padding: 0.4rem 0; }
 
 /* Planar die — 3D cube styled after premium resin planar dice: a
    glossy cosmic/marbled body flecked with glitter, with the actual
@@ -556,7 +556,7 @@ img { max-width: 100%; display: block; }
 
   .planar-die { --die-size: 64px; }
   #roll-die-btn { padding: 0.55rem 1.2rem; font-size: 0.85rem; }
-  .die-wrap { gap: 0.35rem; }
+  .die-wrap { gap: 0.55rem; padding: 0; }
   .die-result { font-size: 0.8rem; }
 }
 
