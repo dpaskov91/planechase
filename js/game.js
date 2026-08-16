@@ -187,8 +187,10 @@ export function initGame(cardsById, { onEditPool }) {
     // Scryfall's card image is the whole printed card — name, art, type
     // line and rules text together — so it needs no redundant caption
     // bar. Just make the card itself (plus a small corner affordance)
-    // open the full-size lightbox.
+    // open the full-size lightbox. The image lives in its own clipped
+    // wrapper so the rounded corner doesn't cut into the zoom button.
     const img = el("img", { src: card.image, alt: card.name });
+    const media = el("div", { class: "active-plane-media" }, [img]);
     const zoomBtn = el(
       "button",
       {
@@ -201,7 +203,7 @@ export function initGame(cardsById, { onEditPool }) {
       },
       "⤢"
     );
-    activePlaneEl.append(img, zoomBtn);
+    activePlaneEl.append(media, zoomBtn);
     activePlaneEl.onclick = () => openLightbox(card);
     activePlaneEl.classList.toggle("is-phenomenon", card === pendingPhenomenon);
     // restart the entrance animation

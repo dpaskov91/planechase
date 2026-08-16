@@ -275,7 +275,9 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius-lg);
   border: 2px solid var(--border-strong);
   background: var(--bg-2);
-  overflow: hidden;
+  /* No overflow:hidden here — it used to clip the zoom button's own
+     edge along with the image. Clipping now happens one level down,
+     on .active-plane-media only, so the button (a sibling) is free. */
   position: relative;
   box-shadow: var(--shadow-soft), 0 0 60px rgba(139,92,246,.15);
   transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
@@ -285,7 +287,12 @@ img { max-width: 100%; display: block; }
   border-color: rgba(245,158,11,.6);
   box-shadow: var(--shadow-soft), 0 0 60px rgba(245,158,11,.25);
 }
-.active-plane img {
+.active-plane-media {
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+.active-plane-media img {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -409,24 +416,38 @@ img { max-width: 100%; display: block; }
 .lightbox-card {
   position: relative; background: var(--bg-2); border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
-  /* The art's height is derived from the card's own width (7:5 via the
-     padding-hack below), which ignores viewport height entirely — on a
-     short/landscape screen a wide card produces art taller than the
-     whole 90vh budget, leaving nothing for the text. Capping width by
-     vh too keeps the art (and therefore the whole card) within budget,
-     leaving genuine room for the info panel to scroll. The 100% term
-     (not a vw one) lets the card go edge-to-edge on mobile — sized
-     against .lightbox's own padding below — while 620px keeps it from
-     ballooning on desktop. */
-  width: min(620px, 63vh, 100%);
+  /* Width is no longer vh-capped — that previously starved the card
+     on wide/short (landscape) screens to keep the art in check, which
+     left most of the viewport empty. The art below now caps its own
+     height independently instead, so the card is free to use the
+     available width: 100% against .lightbox's own (small on mobile)
+     padding, capped at 620px so it doesn't balloon on desktop. */
+  width: min(620px, 100%);
   max-height: 90vh;
   display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-soft);
   animation: fade-up .3s var(--ease);
 }
 /* Every card in this app (Plane/Phenomenon) is landscape-oriented, so
    the art gets the same 7:5 frame + rotation treatment as the active
-   plane display instead of a portrait side column. */
-.lightbox-art { position: relative; width: 100%; padding-top: 71.43%; overflow: hidden; background: var(--bg-3); flex-shrink: 0; }
+   plane display instead of a portrait side column. Sized and centered
+   independently of the (now width-flexible) card: never taller than
+   ~55vh, so the info panel below always keeps real, scrollable room
+   on short/landscape screens. */
+.lightbox-art {
+  position: relative;
+  width: min(100%, calc(55vh * 7 / 5));
+  /* aspect-ratio, not the padding-top(%) hack — percentage padding
+     resolves against the *containing block's* width, not this
+     element's own width, which only coincidentally worked before
+     because the two were equal. Now that this box is intentionally
+     narrower than its container, that hack broke, ballooning the
+     height to ~71% of the card's width instead of its own. */
+  aspect-ratio: 7 / 5;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--bg-3);
+  flex-shrink: 0;
+}
 .lightbox-art img {
   position: absolute; top: 50%; left: 50%;
   width: 71.43%; height: 140%;
