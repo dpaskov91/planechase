@@ -191,18 +191,22 @@ export function initGame(cardsById, { onEditPool }) {
     // wrapper so the rounded corner doesn't cut into the zoom button.
     const img = el("img", { src: card.image, alt: card.name });
     const media = el("div", { class: "active-plane-media" }, [img]);
-    const zoomBtn = el(
-      "button",
-      {
-        class: "icon-btn active-plane-zoom",
-        "aria-label": `View ${card.name} full size`,
-        onClick: (e) => {
-          e.stopPropagation();
-          openLightbox(card);
-        },
+    const zoomBtn = el("button", {
+      class: "icon-btn active-plane-zoom",
+      "aria-label": `View ${card.name} full size`,
+      onClick: (e) => {
+        e.stopPropagation();
+        openLightbox(card);
       },
-      "⤢"
-    );
+    });
+    // A hand-drawn, point-symmetric SVG instead of the "⤢" glyph —
+    // Unicode arrow characters aren't reliably optically centered
+    // within their own cell, and that varies by platform/font.
+    zoomBtn.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+      '<path d="M9 15 L16 8 M11 8 L16 8 L16 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M15 9 L8 16 M13 16 L8 16 L8 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      "</svg>";
     activePlaneEl.append(media, zoomBtn);
     activePlaneEl.onclick = () => openLightbox(card);
     activePlaneEl.classList.toggle("is-phenomenon", card === pendingPhenomenon);

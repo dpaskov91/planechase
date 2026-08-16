@@ -314,15 +314,16 @@ img { max-width: 100%; display: block; }
 }
 .active-plane-zoom {
   position: absolute;
+  width: 26px; height: 26px;
   /* Removing overflow:hidden from .active-plane stopped the corner
-     from clipping this button, but at only 10px it still overhung
-     the card's own 22px corner rounding (--radius-lg) into empty
-     space beyond the edge. For a button of radius r to sit fully
-     inside a corner of radius R, its offset from each straight edge
-     must be >= R - (R-r)/sqrt(2): here 22 - (22-16)/1.4142 ≈ 17.8px. */
-  top: 20px; right: 20px;
+     from clipping this button, but it still needs enough offset to
+     sit fully inside the card's own 22px corner rounding
+     (--radius-lg) rather than overhang past the edge. For a button
+     of radius r, the offset from each straight edge must be at least
+     R - (R-r)/sqrt(2): here 22 - (22-13)/1.4142 ≈ 15.6px. */
+  top: 16px; right: 16px;
   background: rgba(6,7,20,.6); backdrop-filter: blur(4px);
-  font-size: 1rem; line-height: 1;
+  color: #fff;
 }
 .active-plane-zoom:hover { background: rgba(6,7,20,.8); }
 
