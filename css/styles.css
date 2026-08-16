@@ -312,16 +312,15 @@ img { max-width: 100%; display: block; }
 }
 .active-plane-zoom:hover { background: rgba(6,7,20,.8); }
 
-.phenomenon-banner[hidden] { display: none; }
-.phenomenon-banner {
-  width: min(92vw, 620px);
-  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
-  background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(239,68,68,.14));
-  border: 1px solid rgba(245,158,11,.4);
-  padding: 0.9rem 1.1rem; border-radius: var(--radius-md);
+/* Takes over the Planeswalk button's old spot above the die while a
+   Phenomenon needs resolving — the card itself (shown large, with the
+   amber .is-phenomenon glow) already carries the full text. */
+#phenomenon-ack-btn[hidden] { display: none; }
+#phenomenon-ack-btn {
+  background: linear-gradient(135deg, #f59e0b, #ef4444); border-color: transparent; color: #fff;
+  box-shadow: 0 8px 24px rgba(245,158,11,.35);
   animation: fade-up .35s var(--ease);
 }
-.phenomenon-banner strong { color: #fbbf24; }
 
 .stage-controls { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; width: 100%; }
 .die-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
@@ -483,15 +482,13 @@ img { max-width: 100%; display: block; }
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       "topbar   topbar"
-      "stand    controls"
-      "banner   banner";
+      "stand    controls";
     align-items: center;
     column-gap: 1.25rem;
     row-gap: 0.35rem;
   }
   .stage-top-bar { grid-area: topbar; }
   .plane-stand { grid-area: stand; padding: 0; justify-content: center; perspective: 1000px; }
-  .phenomenon-banner { grid-area: banner; width: 100%; }
   .stage-controls {
     grid-area: controls;
     gap: 0.6rem;

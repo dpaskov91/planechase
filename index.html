@@ -86,6 +86,7 @@
           <div class="stage-actions">
             <button id="history-btn" class="btn btn-ghost btn-sm" type="button">History</button>
             <button id="new-pool-btn" class="btn btn-ghost btn-sm" type="button">Edit Deck</button>
+            <button id="planeswalk-btn" class="btn btn-ghost btn-sm" type="button" disabled title="Manually planeswalk without rolling">Planeswalk</button>
             <button id="reset-game-btn" class="btn btn-ghost btn-sm" type="button">Reshuffle &amp; Restart</button>
           </div>
         </div>
@@ -99,16 +100,11 @@
           </div>
         </div>
 
-        <div class="phenomenon-banner" id="phenomenon-banner" hidden>
-          <strong>Phenomenon!</strong>
-          <span id="phenomenon-text"></span>
-          <button id="phenomenon-ack-btn" class="btn btn-primary btn-sm" type="button">Resolve &amp; Continue</button>
-        </div>
-
         <div class="stage-controls">
-          <button id="planeswalk-btn" class="btn btn-ghost btn-sm" type="button" disabled title="Manually planeswalk without rolling">
-            Planeswalk
-          </button>
+          <!-- The card itself already shows the Phenomenon's full text,
+               so this button is all that's needed here — it takes the
+               spot the Planeswalk button used to occupy. -->
+          <button id="phenomenon-ack-btn" class="btn btn-primary btn-sm" type="button" hidden>Resolve &amp; Continue</button>
 
           <div class="die-wrap">
             <div id="planar-die" class="planar-die" role="img" aria-label="Planar die">

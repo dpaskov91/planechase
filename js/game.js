@@ -8,8 +8,6 @@ const deckCountEl = document.getElementById("deck-count");
 const planeswalkBtn = document.getElementById("planeswalk-btn");
 const rollDieBtn = document.getElementById("roll-die-btn");
 const dieResultEl = document.getElementById("die-result");
-const phenomenonBanner = document.getElementById("phenomenon-banner");
-const phenomenonText = document.getElementById("phenomenon-text");
 const phenomenonAckBtn = document.getElementById("phenomenon-ack-btn");
 const historyBtn = document.getElementById("history-btn");
 const historyPanel = document.getElementById("history-panel");
@@ -45,7 +43,7 @@ export function initGame(cardsById, { onEditPool }) {
     store.setCurrent(null);
     store.setHistory([]);
     pendingPhenomenon = null;
-    phenomenonBanner.hidden = true;
+    phenomenonAckBtn.hidden = true;
     renderHistory();
     drawUntilPlane({ initial: true });
   }
@@ -90,8 +88,7 @@ export function initGame(cardsById, { onEditPool }) {
 
     if (card.layout === "phenomenon") {
       pendingPhenomenon = card;
-      phenomenonText.textContent = card.oracleText;
-      phenomenonBanner.hidden = false;
+      phenomenonAckBtn.hidden = false;
       logHistory(card, "phenomenon");
       store.setDeck(deck);
       renderActivePlane();
@@ -139,7 +136,7 @@ export function initGame(cardsById, { onEditPool }) {
     if (!pendingPhenomenon) return;
     deck.push(pendingPhenomenon.id);
     pendingPhenomenon = null;
-    phenomenonBanner.hidden = true;
+    phenomenonAckBtn.hidden = true;
     drawUntilPlane();
   }
 
