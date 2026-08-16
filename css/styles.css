@@ -160,7 +160,13 @@ img { max-width: 100%; display: block; }
   background: var(--grad-brand); border-color: transparent; color: #fff;
   box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35);
 }
-.btn-primary:hover:not(:disabled) { box-shadow: 0 10px 30px rgba(139, 92, 246, 0.5); }
+/* Restate the gradient background here — .btn:hover:not(:disabled)
+   has higher selector specificity than plain .btn-primary, so without
+   this it wins on hover and replaces the gradient with the flat
+   translucent "ghost" background. On mobile, a tap leaves :hover
+   stuck until the next tap elsewhere, which read as the button
+   staying in a secondary/ghost style after every roll. */
+.btn-primary:hover:not(:disabled) { background: var(--grad-brand); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.5); }
 .btn-secondary {
   background: linear-gradient(135deg, rgba(6,182,212,.25), rgba(139,92,246,.25));
   border-color: rgba(6,182,212,.4);

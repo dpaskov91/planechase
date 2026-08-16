@@ -9,6 +9,7 @@ const planeswalkBtn = document.getElementById("planeswalk-btn");
 const rollDieBtn = document.getElementById("roll-die-btn");
 const dieResultEl = document.getElementById("die-result");
 const phenomenonAckBtn = document.getElementById("phenomenon-ack-btn");
+const backBtn = document.getElementById("back-btn");
 const historyBtn = document.getElementById("history-btn");
 const historyPanel = document.getElementById("history-panel");
 const historyCloseBtn = document.getElementById("history-close-btn");
@@ -20,6 +21,11 @@ export function initGame(cardsById, { onEditPool }) {
   let deck = store.getDeck();
   let current = store.getCurrent();
   let pendingPhenomenon = null;
+  // One snapshot per planeswalk (manual or die-rolled), taken before
+  // the deck/current change — however many phenomena get resolved
+  // along the way to the next plane, it's still a single logical step
+  // to undo. Session-only: a page reload starts a game with no undo.
+  let undoStack = [];
   const die = createPlanarDie(document.getElementById("die-cube"));
 
   renderActivePlane();
@@ -31,6 +37,7 @@ export function initGame(cardsById, { onEditPool }) {
   planeswalkBtn.addEventListener("click", () => planeswalk());
   rollDieBtn.addEventListener("click", () => handleRoll());
   phenomenonAckBtn.addEventListener("click", () => continueThroughPhenomenon());
+  backBtn.addEventListener("click", () => stepBack());
   historyBtn.addEventListener("click", () => (historyPanel.hidden = false));
   historyCloseBtn.addEventListener("click", () => (historyPanel.hidden = true));
   newPoolBtn.addEventListener("click", () => onEditPool());
@@ -44,6 +51,7 @@ export function initGame(cardsById, { onEditPool }) {
     store.setHistory([]);
     pendingPhenomenon = null;
     phenomenonAckBtn.hidden = true;
+    undoStack = [];
     renderHistory();
     drawUntilPlane({ initial: true });
   }
@@ -64,11 +72,34 @@ export function initGame(cardsById, { onEditPool }) {
       toast("Your deck is empty — edit your deck first.");
       return;
     }
+    undoStack.push({ deck: deck.slice(), current, history: store.getHistory() });
     if (current) {
       deck.push(current);
       current = null;
     }
     drawUntilPlane();
+  }
+
+  // Undoes the most recent planeswalk (manual or die-rolled), including
+  // any phenomena that were resolved along the way to the plane you're
+  // currently on — restoring the deck, active plane and history log to
+  // exactly how they looked right before that step.
+  function stepBack() {
+    if (undoStack.length === 0) return;
+    const snap = undoStack.pop();
+    deck = snap.deck;
+    current = snap.current;
+    pendingPhenomenon = null;
+    phenomenonAckBtn.hidden = true;
+    store.setDeck(deck);
+    store.setCurrent(current);
+    store.setHistory(snap.history);
+    renderActivePlane();
+    renderDeckCount();
+    renderHistory();
+    updateControls();
+    preloadUpcomingPlanes();
+    scrollStageIntoView();
   }
 
   function drawUntilPlane({ initial = false } = {}) {
@@ -151,7 +182,6 @@ export function initGame(cardsById, { onEditPool }) {
     }
     dieResultEl.textContent = OUTCOME_LABELS[result.outcome];
     dieResultEl.classList.add(result.outcome);
-    toast(OUTCOME_LABELS[result.outcome]);
     rollDieBtn.disabled = false;
 
     if (result.outcome === "planeswalk") {
@@ -248,6 +278,7 @@ export function initGame(cardsById, { onEditPool }) {
     const blocked = !!pendingPhenomenon;
     planeswalkBtn.disabled = !hasDeck || blocked;
     rollDieBtn.disabled = !current || blocked;
+    backBtn.disabled = undoStack.length === 0;
   }
 
   return { startNewGame };
