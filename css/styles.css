@@ -337,7 +337,7 @@ img { max-width: 100%; display: block; }
   animation: fade-up .35s var(--ease);
 }
 
-.stage-controls { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; width: 100%; }
+.stage-controls { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; width: 100%; padding-bottom: 2rem; }
 .die-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; padding: 0.4rem 0; }
 
 /* Planar die — 3D cube styled after premium resin planar dice: a
@@ -543,6 +543,7 @@ img { max-width: 100%; display: block; }
        (e.g. "Chaos! Trigger this plane's chaos ability." appearing/
        clearing) resizes this column and shoves the card sideways. */
     width: 168px;
+    padding-bottom: 0;
   }
 
   .active-plane {
