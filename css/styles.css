@@ -89,6 +89,7 @@ img { max-width: 100%; display: block; }
   border-bottom: 1px solid var(--border);
 }
 .brand { display: flex; align-items: center; gap: 0.6rem; }
+.header-right { display: flex; align-items: center; gap: 0.6rem; }
 .brand-mark {
   width: 26px; height: 26px; border-radius: 8px;
   background: var(--grad-brand);
@@ -494,6 +495,20 @@ img { max-width: 100%; display: block; }
   z-index: 3;
   background: rgba(6,7,20,.7); backdrop-filter: blur(4px);
 }
+
+/* Rules modal — reuses .lightbox/.lightbox-backdrop/.lightbox-close for
+   the overlay chrome and open/close behavior, but the card itself is
+   just scrollable text rather than the art+info split used for cards. */
+.rules-card {
+  overflow-y: auto;
+  padding: 1.85rem clamp(1.1rem, 4vw, 2rem) 2rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+.rules-card h2 { font-family: var(--font-display); font-size: 1.4rem; padding-right: 2.5rem; }
+.rules-card h3 { font-family: var(--font-display); font-size: 1.05rem; color: var(--text-0); margin-top: 0.6rem; }
+.rules-card p { line-height: 1.55; color: var(--text-1); }
+.rules-card ul { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; color: var(--text-1); line-height: 1.5; }
+.rules-card strong { color: var(--text-0); }
 
 /* Toasts */
 .toast-root { position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }

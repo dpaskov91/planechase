@@ -17,10 +17,13 @@
     <span class="brand-mark" aria-hidden="true"></span>
     <h1>Planechase</h1>
   </div>
-  <nav class="view-tabs" aria-label="Views">
-    <button class="tab-btn is-active" data-view="picker" type="button">Deck Builder</button>
-    <button class="tab-btn" data-view="game" type="button">Game</button>
-  </nav>
+  <div class="header-right">
+    <nav class="view-tabs" aria-label="Views">
+      <button class="tab-btn is-active" data-view="picker" type="button">Deck Builder</button>
+      <button class="tab-btn" data-view="game" type="button">Game</button>
+    </nav>
+    <button id="rules-btn" class="icon-btn" type="button" aria-label="How to play Planechase" title="How to play">?</button>
+  </div>
 </header>
 
 <main id="main">
@@ -165,6 +168,41 @@
       <p id="lightbox-text"></p>
       <p id="lightbox-set" class="muted small"></p>
     </div>
+  </div>
+</div>
+
+<div id="rules-modal" class="lightbox rules-modal" hidden>
+  <div class="lightbox-backdrop" id="rules-backdrop"></div>
+  <button class="icon-btn lightbox-close" id="rules-close" type="button" aria-label="Close">✕</button>
+  <div class="lightbox-card rules-card">
+    <h2>How to Play Planechase</h2>
+    <p class="muted">Planechase is a casual variant you can bolt onto any Magic deck — it adds a shared "planar deck" of Plane and Phenomenon cards that changes the rules of the game around everyone at the table while you play.</p>
+
+    <h3>Setup</h3>
+    <p>Build a planar deck in the <strong>Deck Builder</strong> tab (10+ cards is typical), then hit <strong>Start Game</strong>. The app shuffles it and turns up the first card as your starting plane — this is the "world" you're currently playing in, on top of your normal game.</p>
+
+    <h3>Planes vs. Phenomena</h3>
+    <p><strong>Planes</strong> stay in play until you leave them. Many have a chaos ability, printed on the card, that only triggers when you roll Chaos. <strong>Phenomena</strong> aren't planes — they resolve their effect immediately and then get shuffled aside, so play continues straight on to the next card underneath. You can't roll the die or planeswalk away while one is on display; resolve it with the button on screen first (chained phenomena resolve one after another automatically).</p>
+
+    <h3>The Planar Die</h3>
+    <p>The die has six faces: two show the Planeswalk symbol, one shows the Chaos symbol, and three are blank.</p>
+    <ul>
+      <li><strong>Planeswalk</strong> — leave the current plane (it goes to the bottom of the planar deck) and turn up a new one.</li>
+      <li><strong>Chaos</strong> — trigger the current plane's chaos ability, if it has one.</li>
+      <li><strong>Blank</strong> — nothing happens; play continues as normal.</li>
+    </ul>
+    <p>In the paper game, the active player may roll once per turn as a special action. This app doesn't track turns for you — roll whenever it makes sense for your group.</p>
+
+    <h3>Using this app</h3>
+    <ul>
+      <li><strong>Roll Planar Die</strong> — rolls for you and shows the result.</li>
+      <li><strong>Planeswalk</strong> — leave the current plane immediately, without rolling (for cards that let you planeswalk directly).</li>
+      <li><strong>Back</strong> — undoes your last planeswalk and returns to the previous plane.</li>
+      <li><strong>History</strong> — shows every plane you've visited this game.</li>
+      <li><strong>Edit Deck / Reshuffle &amp; Restart</strong> — change which cards are in your planar deck, or shuffle and start over.</li>
+    </ul>
+
+    <p class="muted small">This is a fan-made companion tool — it doesn't enforce turn order or interact with your actual game state, so use it alongside your regular rules judgment.</p>
   </div>
 </div>
 

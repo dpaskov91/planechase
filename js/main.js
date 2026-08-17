@@ -3,6 +3,7 @@ import { store } from "./state.js?v=__CACHE_BUST__";
 import { initPicker } from "./picker.js?v=__CACHE_BUST__";
 import { initGame } from "./game.js?v=__CACHE_BUST__";
 import { toast } from "./util.js?v=__CACHE_BUST__";
+import { initRules } from "./rules.js?v=__CACHE_BUST__";
 
 const tabButtons = document.querySelectorAll(".tab-btn");
 const views = {
@@ -36,6 +37,8 @@ function setStatus(message, isLoading = false) {
   statusBanner.textContent = message;
   statusBanner.classList.toggle("is-loading", isLoading);
 }
+
+initRules();
 
 async function bootstrap() {
   setStatus("Loading Planechase cards from Scryfall…", true);
