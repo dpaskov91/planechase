@@ -11,15 +11,23 @@
 // value "planar" (the same way Archenemy schemes all share "scheme").
 // We tell them apart by type_line instead: Phenomenon cards have no
 // subtype ("Phenomenon"), Planes always have one ("Plane — Dominaria").
-const SEARCH_URL =
+const searchUrl = (unique) =>
   "https://api.scryfall.com/cards/search?" +
-  new URLSearchParams({
-    q: "layout:planar -is:digital",
-    unique: "cards",
-    order: "name",
-  }).toString();
+  new URLSearchParams({ q: "layout:planar -is:digital", unique, order: "name" }).toString();
 
-const CACHE_KEY = "planechase.cardCache.v3";
+// One entry per card (its id is what saved decks/games refer to)...
+const CARDS_URL = searchUrl("cards");
+// ...plus every printing, used only to learn all the sets each card has
+// appeared in. With unique=cards alone, a 2009 plane reprinted in
+// Planechase Anthology only "belonged" to Anthology in the set filter.
+const PRINTS_URL = searchUrl("prints");
+
+// Scryfall asks API clients to leave 50–100ms between requests.
+const REQUEST_GAP_MS = 100;
+
+const CACHE_KEY = "planechase.cardCache.v4";
+// Older caches (no per-card set list) are still good enough offline.
+const LEGACY_CACHE_KEYS = ["planechase.cardCache.v3"];
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function normalizeCard(raw) {
@@ -34,6 +42,9 @@ function normalizeCard(raw) {
     oracleText: raw.oracle_text ?? face.oracle_text ?? "",
     set: raw.set,
     setName: raw.set_name,
+    // Every set this card was printed in, oldest first; filled in from
+    // the prints query in loadPlanechaseCards.
+    sets: [{ code: raw.set, name: raw.set_name }],
     collectorNumber: raw.collector_number,
     releasedAt: raw.released_at,
     // Three sizes so tiny grid thumbnails don't pull full-resolution
@@ -55,20 +66,36 @@ async function fetchPage(url) {
   return res.json();
 }
 
-async function fetchAllPages() {
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchAllPages(firstUrl) {
   const cards = [];
-  let url = SEARCH_URL;
+  let url = firstUrl;
   while (url) {
     const page = await fetchPage(url);
     cards.push(...page.data);
     url = page.has_more ? page.next_page : null;
+    if (url) await pause(REQUEST_GAP_MS);
   }
   return cards;
 }
 
-function readCache({ allowStale = false } = {}) {
+// Map of oracle_id -> [{ code, name }] across every printing.
+function setsByOracleId(prints) {
+  const byOracle = new Map();
+  const sorted = [...prints].sort((a, b) => (a.released_at || "").localeCompare(b.released_at || ""));
+  for (const p of sorted) {
+    if (!p.oracle_id) continue;
+    const list = byOracle.get(p.oracle_id) ?? [];
+    if (!list.some((s) => s.code === p.set)) list.push({ code: p.set, name: p.set_name });
+    byOracle.set(p.oracle_id, list);
+  }
+  return byOracle;
+}
+
+function readCache({ allowStale = false, key = CACHE_KEY } = {}) {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const expired = !parsed.fetchedAt || Date.now() - parsed.fetchedAt > CACHE_TTL_MS;
@@ -86,9 +113,15 @@ function writeCache(cards) {
       CACHE_KEY,
       JSON.stringify({ fetchedAt: Date.now(), cards })
     );
+    LEGACY_CACHE_KEYS.forEach((key) => localStorage.removeItem(key));
   } catch {
     // Storage full/unavailable — fine, we just skip caching.
   }
+}
+
+/** Every set a card appeared in (custom cards may only have set/setName). */
+export function cardSets(card) {
+  return card.sets?.length ? card.sets : [{ code: card.set, name: card.setName }];
 }
 
 /**
@@ -112,16 +145,26 @@ export async function loadPlanechaseCards({ force = false, onStale } = {}) {
     if (cached) return [...cached, ...getCustomCards()];
   }
 
-  let raw;
+  let raw, prints;
   try {
-    raw = await fetchAllPages();
+    raw = await fetchAllPages(CARDS_URL);
+    await pause(REQUEST_GAP_MS);
+    prints = await fetchAllPages(PRINTS_URL);
   } catch (err) {
-    const stale = readCache({ allowStale: true });
+    const stale = [CACHE_KEY, ...LEGACY_CACHE_KEYS]
+      .map((key) => readCache({ allowStale: true, key }))
+      .find(Boolean);
     if (!stale) throw err;
     onStale?.(err);
     return [...stale, ...getCustomCards()];
   }
-  const normalized = raw.map(normalizeCard);
+  const sets = setsByOracleId(prints);
+  const normalized = raw.map((r) => {
+    const card = normalizeCard(r);
+    const all = sets.get(r.oracle_id);
+    if (all?.length) card.sets = all;
+    return card;
+  });
   writeCache(normalized);
   return [...normalized, ...getCustomCards()];
 }

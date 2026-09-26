@@ -51,3 +51,12 @@ export function formatTime(ts) {
   const d = new Date(ts);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
+
+// A hand-drawn, point-symmetric "expand" icon instead of the "⤢" glyph —
+// Unicode arrow characters aren't reliably optically centered within
+// their own cell, and that varies by platform/font.
+export const ZOOM_ICON_SVG =
+  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+  '<path d="M9 15 L16 8 M11 8 L16 8 L16 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '<path d="M15 9 L8 16 M13 16 L8 16 L8 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+  "</svg>";

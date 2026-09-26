@@ -14,8 +14,11 @@ die — all in a static page hosted on GitHub Pages.
   correct as new sets release. Results are cached in `localStorage` for a
   week to keep repeat visits fast, and an expired cache is still used if
   Scryfall can't be reached.
-- **Deck builder** — search, filter by set or card type, and pick exactly
-  which planes are in play. Selections persist between visits.
+- **Deck builder** — search, filter by set (every set a card was printed
+  in) or card type, and pick exactly which planes are in play. The
+  magnifier on each card opens it full size. A soft warning shows when a
+  deck is outside the official limits (10+ cards, at most 2 Phenomena).
+  Selections persist between visits.
 - **Game board** — shuffles your planar deck, tracks the face-down deck and
   face-up active plane, handles Phenomenon resolution (auto-continues to
   the next Plane per the real rules), and keeps a visit history. **Back**
@@ -26,6 +29,10 @@ die — all in a static page hosted on GitHub Pages.
   A roll-cost counter shows what the next roll costs this turn (free,
   then {1}, {2}, …) with a **New turn** reset.
 - **How to Play** — the **?** button in the header opens a rules summary.
+- **Phone-friendly** — the phone's Back button moves between tabs, the
+  screen stays awake during a game, restarting a game in progress asks
+  first, and it can be added to the home screen as a full-screen app that
+  also opens offline.
 - **No backend, no build step** — plain HTML/CSS/JS modules. Deploys as-is.
 
 ## Local development
@@ -44,19 +51,24 @@ python3 -m http.server 8000
 ## Project structure
 
 ```
-index.html          Markup for both views (deck builder + game board)
-css/styles.css       Design system + all styling
+index.html              Markup for both views (deck builder + game board)
+css/styles.css          Design system + all styling
 js/
-  scryfall.js        Fetches & caches Plane/Phenomenon cards from Scryfall
-  state.js            localStorage-backed app state (pool, deck, history)
-  picker.js           Deck builder UI
-  game.js              Shuffle, planeswalk, phenomenon handling, history
+  main.js               Bootstraps everything, view switching (URL hash)
+  scryfall.js           Fetches & caches Plane/Phenomenon cards from Scryfall
+  state.js              localStorage-backed app state (pool, deck, history, …)
+  picker.js             Deck builder UI
+  game.js               Shuffle, planeswalk, phenomena, Back, roll counter
   die.js                Planar die weighting + 3D roll animation
-  lightbox.js          Shared full-card viewer
-  rules.js             "How to Play" rules modal
-  modal.js             Shared overlay behavior (close, Escape, focus handling)
-  util.js               Small shared helpers (shuffle, dom, toast)
-  main.js                Bootstraps everything, wires up view switching
+  lightbox.js           Shared full-card viewer
+  rules.js              "How to Play" rules modal
+  modal.js              Shared overlay behavior (close, Escape, focus)
+  confirm.js            Styled yes/no prompt (built on modal.js)
+  wakelock.js           Keeps the screen on while the Game view is open
+  util.js               Small shared helpers (shuffle, dom, toast, icons)
+sw.js                   Network-first service worker (offline + installable)
+manifest.webmanifest    Home-screen app name, colors and icons
+assets/                 Favicon and home-screen icons
 .github/workflows/deploy.yml   Deploys to GitHub Pages on push to main
 ```
 
@@ -65,7 +77,8 @@ js/
 - **Homebrew/extra cards** — add objects to the array returned by
   `getCustomCards()` in `js/scryfall.js`. They're merged into the pool
   alongside Scryfall's data using the same shape:
-  `{ id, name, layout, typeLine, oracleText, set, setName, imageSmall, image, imageLarge }`.
+  `{ id, name, layout, typeLine, oracleText, set, setName, imageSmall, image, imageLarge }`
+  (plus an optional `sets: [{ code, name }]` if the card belongs to several sets).
 - **New views** — the app is a simple two-view tab switcher in `main.js`
   (`showView`). Add a new `<section class="view">`, a tab button, and a
   view key to extend it (e.g. an Archenemy scheme deck, since Scryfall

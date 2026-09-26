@@ -7,6 +7,12 @@
 <meta name="description" content="Play Magic: The Gathering Planechase in your browser — pick your planar deck, shuffle, planeswalk, and roll the planar die." />
 <meta name="theme-color" content="#0b0e1a" />
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="assets/icon-180.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Planechase" />
 <link rel="stylesheet" href="css/styles.css?v=__CACHE_BUST__" />
 </head>
 <body>
@@ -62,6 +68,8 @@
         <button id="select-random-btn" class="btn btn-ghost" type="button">Random 10</button>
       </div>
     </div>
+
+    <p id="deck-warning" class="deck-warning" role="status" hidden></p>
 
     <div id="picker-status" class="status-banner" hidden></div>
 
@@ -180,10 +188,11 @@
   <button class="icon-btn lightbox-close" id="rules-close" type="button" aria-label="Close">✕</button>
   <div class="lightbox-card rules-card" tabindex="0">
     <h2 id="rules-heading">How to Play Planechase</h2>
-    <p class="muted">Planechase is a casual variant you can bolt onto any Magic deck — it adds a shared "planar deck" of Plane and Phenomenon cards that changes the rules of the game around everyone at the table while you play.</p>
+    <p class="muted">Planechase is a casual variant you can bolt onto any Magic deck — it adds a "planar deck" of Plane and Phenomenon cards that changes the rules of the game around everyone at the table while you play.</p>
 
     <h3>Setup</h3>
-    <p>Build a planar deck in the <strong>Deck Builder</strong> tab (10+ cards is typical), then hit <strong>Start Game</strong>. The app shuffles it and turns up the first card as your starting plane — this is the "world" you're currently playing in, on top of your normal game.</p>
+    <p>Build a planar deck in the <strong>Deck Builder</strong> tab, then hit <strong>Start Game</strong>. The app shuffles it and turns up the first card as your starting plane — this is the "world" you're currently playing in, on top of your normal game.</p>
+    <p>In the official rules each player brings their own planar deck: <strong>at least 10 cards</strong>, <strong>no more than 2 Phenomena</strong>, and no two cards with the same name. The rules also allow everyone to share a single planar deck instead — that's how this app works. The Deck Builder warns you when a deck is outside the official limits, but you can still play it.</p>
 
     <h3>Planes vs. Phenomena</h3>
     <p><strong>Planes</strong> stay in play until you leave them. Many have a chaos ability, printed on the card, that only triggers when you roll Chaos. <strong>Phenomena</strong> aren't planes — they resolve their effect immediately and then go to the bottom of the planar deck, so play continues straight on to the next card. You can't roll the die or planeswalk away while one is on display; resolve it with the button on screen first (chained phenomena resolve one after another automatically).</p>
@@ -204,10 +213,22 @@
       <li><strong>Planeswalk</strong> — leave the current plane immediately, without rolling (for cards that let you planeswalk directly).</li>
       <li><strong>Back</strong> — undoes your last planeswalk and returns to the previous plane.</li>
       <li><strong>History</strong> — shows every plane you've visited this game.</li>
+      <li><strong>Magnifier</strong> on any card — opens it full size to read its text.</li>
       <li><strong>Edit Deck / Reshuffle &amp; Restart</strong> — change which cards are in your planar deck, or shuffle and start over.</li>
     </ul>
 
     <p class="muted small">This is a fan-made companion tool — it doesn't track whose turn it is or interact with your actual game state, so use it alongside your regular rules judgment.</p>
+  </div>
+</div>
+
+<div id="confirm-modal" class="lightbox confirm-modal" role="alertdialog" aria-modal="true" aria-describedby="confirm-message" hidden>
+  <div class="lightbox-backdrop" id="confirm-backdrop"></div>
+  <div class="lightbox-card confirm-card">
+    <p id="confirm-message"></p>
+    <div class="confirm-actions">
+      <button id="confirm-cancel" class="btn btn-ghost" type="button">Cancel</button>
+      <button id="confirm-ok" class="btn btn-primary" type="button">Continue</button>
+    </div>
   </div>
 </div>
 

@@ -1,4 +1,5 @@
-import { el, shuffle, toast, formatTime } from "./util.js?v=__CACHE_BUST__";
+import { el, shuffle, toast, formatTime, ZOOM_ICON_SVG } from "./util.js?v=__CACHE_BUST__";
+import { confirmDialog } from "./confirm.js?v=__CACHE_BUST__";
 import { store } from "./state.js?v=__CACHE_BUST__";
 import { openLightbox } from "./lightbox.js?v=__CACHE_BUST__";
 import { createPlanarDie, OUTCOME_LABELS } from "./die.js?v=__CACHE_BUST__";
@@ -81,7 +82,7 @@ export function initGame(cardsById, { onEditPool }) {
     if (!selectedIds.some((id) => cardsById.get(id)?.layout === "plane")) {
       toast("Your deck needs at least one Plane.");
       onEditPool();
-      return;
+      return false;
     }
     gameToken++;
     deck = shuffle(selectedIds);
@@ -95,15 +96,26 @@ export function initGame(cardsById, { onEditPool }) {
     setRolls(0);
     renderHistory();
     drawUntilPlane({ initial: true });
+    return true;
   }
 
-  function restartFromPool() {
+  // Anything past the opening plane is worth confirming before it's
+  // thrown away — restarting can't be undone with Back.
+  function hasProgress() {
+    return store.getHistory().length > 1 || rollsThisTurn > 0;
+  }
+
+  async function restartFromPool() {
     const pool = store.getPool();
     if (pool.length === 0) {
       toast("Your deck is empty — edit your deck first.");
       onEditPool();
       return;
     }
+    if (hasProgress() && !(await confirmDialog(
+      "Reshuffle and restart? This ends the current game and clears its history.",
+      { confirmLabel: "Restart" }
+    ))) return;
     startNewGame(pool);
     toast("Planar deck reshuffled.");
   }
@@ -314,14 +326,7 @@ export function initGame(cardsById, { onEditPool }) {
         openLightbox(card);
       },
     });
-    // A hand-drawn, point-symmetric SVG instead of the "⤢" glyph —
-    // Unicode arrow characters aren't reliably optically centered
-    // within their own cell, and that varies by platform/font.
-    zoomBtn.innerHTML =
-      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
-      '<path d="M9 15 L16 8 M11 8 L16 8 L16 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '<path d="M15 9 L8 16 M13 16 L8 16 L8 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
-      "</svg>";
+    zoomBtn.innerHTML = ZOOM_ICON_SVG;
     activePlaneEl.append(media, zoomBtn);
     activePlaneEl.onclick = () => openLightbox(card);
     activePlaneEl.classList.toggle("is-phenomenon", card === pendingPhenomenon);
@@ -367,5 +372,5 @@ export function initGame(cardsById, { onEditPool }) {
     backBtn.disabled = undoStack.length === 0 || busy;
   }
 
-  return { startNewGame };
+  return { startNewGame, hasProgress };
 }

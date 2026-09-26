@@ -5,7 +5,7 @@
 
 const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-export function createModal({ root, closeBtn, backdrop }) {
+export function createModal({ root, closeBtn, backdrop, onClose }) {
   let returnFocusTo = null;
 
   function open() {
@@ -21,6 +21,7 @@ export function createModal({ root, closeBtn, backdrop }) {
     document.body.style.overflow = "";
     returnFocusTo?.focus?.();
     returnFocusTo = null;
+    onClose?.();
   }
 
   function trapTab(e) {

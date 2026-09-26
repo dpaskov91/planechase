@@ -1,6 +1,7 @@
 import { el, debounce, toast, shuffle } from "./util.js?v=__CACHE_BUST__";
 import { store } from "./state.js?v=__CACHE_BUST__";
 import { openLightbox } from "./lightbox.js?v=__CACHE_BUST__";
+import { cardSets } from "./scryfall.js?v=__CACHE_BUST__";
 
 const grid = document.getElementById("card-grid");
 const searchInput = document.getElementById("search-input");
@@ -8,6 +9,21 @@ const setFilter = document.getElementById("set-filter");
 const selectionCountEl = document.getElementById("selection-count");
 const startGameBtn = document.getElementById("start-game-btn");
 const startGameCountEl = document.getElementById("start-game-count");
+const deckWarningEl = document.getElementById("deck-warning");
+
+// Official per-player planar deck limits (the app itself allows any
+// deck with at least one Plane; these only drive a soft warning).
+const OFFICIAL_MIN_CARDS = 10;
+const OFFICIAL_MAX_PHENOMENA = 2;
+
+// A magnifying glass (not the expand arrows used on the big card), so it
+// reads as "look closer" and can't be mistaken for the ringed selection
+// circle in the opposite corner.
+const MAGNIFIER_SVG =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+  '<circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2.4"/>' +
+  '<path d="M15 15 L20 20" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' +
+  "</svg>";
 
 export function initPicker(allCards, { onStartGame }) {
   const selected = new Set(
@@ -76,7 +92,9 @@ export function initPicker(allCards, { onStartGame }) {
   function visibleCards() {
     return allCards.filter((c) => {
       if (typeFilter !== "all" && c.layout !== typeFilter) return false;
-      if (setValue !== "all" && c.set !== setValue) return false;
+      // A card counts as "in" every set it was ever printed in, not
+      // just the one printing we show.
+      if (setValue !== "all" && !cardSets(c).some((s) => s.code === setValue)) return false;
       if (searchTerm) {
         const haystack = `${c.name} ${c.oracleText}`.toLowerCase();
         if (!haystack.includes(searchTerm)) return false;
@@ -104,6 +122,22 @@ export function initPicker(allCards, { onStartGame }) {
       ? "(add at least one Plane)"
       : `(${selected.size} card${selected.size === 1 ? "" : "s"})`;
     startGameBtn.disabled = selected.size === 0 || needsPlane;
+    updateDeckWarning();
+  }
+
+  function updateDeckWarning() {
+    const phenomena = allCards.filter((c) => c.layout === "phenomenon" && selected.has(c.id)).length;
+    const issues = [];
+    if (selected.size > 0 && selected.size < OFFICIAL_MIN_CARDS) {
+      issues.push(`at least ${OFFICIAL_MIN_CARDS} cards (you have ${selected.size})`);
+    }
+    if (phenomena > OFFICIAL_MAX_PHENOMENA) {
+      issues.push(`no more than ${OFFICIAL_MAX_PHENOMENA} Phenomena (you have ${phenomena})`);
+    }
+    deckWarningEl.hidden = issues.length === 0;
+    deckWarningEl.textContent = issues.length
+      ? `Outside the official deck limits: ${issues.join(" and ")}. Fine for casual play.`
+      : "";
   }
 
   function render() {
@@ -125,19 +159,18 @@ export function initPicker(allCards, { onStartGame }) {
   }
 
   function renderTile(card) {
-    const isSelected = selected.has(card.id);
+    const check = el("div", { class: "card-tile-check" });
     const tile = el(
       "div",
       {
-        class: `card-tile${isSelected ? " is-selected" : ""}`,
+        class: "card-tile",
         role: "checkbox",
-        "aria-checked": String(isSelected),
         tabindex: "0",
+        "aria-label": `${card.name} (${card.layout === "phenomenon" ? "Phenomenon" : "Plane"})`,
       },
       [
-        el("img", { src: card.imageSmall, alt: card.name, loading: "lazy" }),
-        el("div", { class: "card-tile-check" }, isSelected ? "✓" : ""),
-        el("div", { class: "card-tile-zoom" }, "Tap to view"),
+        el("img", { src: card.imageSmall, alt: "", loading: "lazy" }),
+        check,
         el("div", { class: "card-tile-label" }, [
           card.name,
           el(
@@ -148,11 +181,16 @@ export function initPicker(allCards, { onStartGame }) {
         ]),
       ]
     );
+    tile.checkEl = check;
 
+    // Updates just this tile in place — rebuilding all ~200 tiles on
+    // every tap was needless work.
     const toggle = () => {
       if (selected.has(card.id)) selected.delete(card.id);
       else selected.add(card.id);
-      persistAndRefresh();
+      store.setPool([...selected]);
+      syncTile(tile, card);
+      updateSummary();
     };
 
     tile.addEventListener("click", toggle);
@@ -164,17 +202,37 @@ export function initPicker(allCards, { onStartGame }) {
         openLightbox(card);
       }
     });
+    // Kept as shortcuts; the magnifier button is the discoverable way.
     tile.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       openLightbox(card);
     });
 
-    return tile;
+    // A sibling of the tile (not inside its role="checkbox"), so it's
+    // its own button for screen readers and never toggles selection.
+    const zoomBtn = el("button", {
+      class: "icon-btn card-tile-zoom-btn",
+      type: "button",
+      "aria-label": `View ${card.name} full size`,
+      title: "View full size",
+      onClick: () => openLightbox(card),
+    });
+    zoomBtn.innerHTML = MAGNIFIER_SVG;
+
+    syncTile(tile, card);
+    return el("div", { class: "card-tile-wrap" }, [tile, zoomBtn]);
+  }
+
+  function syncTile(tile, card) {
+    const isSelected = selected.has(card.id);
+    tile.classList.toggle("is-selected", isSelected);
+    tile.setAttribute("aria-checked", String(isSelected));
+    tile.checkEl.textContent = isSelected ? "✓" : "";
   }
 
   function populateSetFilter(cards) {
     const sets = new Map();
-    for (const c of cards) sets.set(c.set, c.setName);
+    for (const c of cards) for (const s of cardSets(c)) sets.set(s.code, s.name);
     const sorted = [...sets.entries()].sort((a, b) => a[1].localeCompare(b[1]));
     for (const [code, name] of sorted) {
       setFilter.append(el("option", { value: code }, name));
