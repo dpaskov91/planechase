@@ -1,4 +1,4 @@
-import { el, debounce, toast } from "./util.js?v=__CACHE_BUST__";
+import { el, debounce, toast, shuffle } from "./util.js?v=__CACHE_BUST__";
 import { store } from "./state.js?v=__CACHE_BUST__";
 import { openLightbox } from "./lightbox.js?v=__CACHE_BUST__";
 
@@ -60,7 +60,7 @@ export function initPicker(allCards, { onStartGame }) {
   document.getElementById("select-random-btn").addEventListener("click", () => {
     const pool = visibleCards();
     selected.clear();
-    const picks = [...pool].sort(() => Math.random() - 0.5).slice(0, 10);
+    const picks = shuffle(pool).slice(0, 10);
     picks.forEach((c) => selected.add(c.id));
     persistAndRefresh();
     if (pool.length < 10) {
@@ -69,7 +69,7 @@ export function initPicker(allCards, { onStartGame }) {
   });
 
   startGameBtn.addEventListener("click", () => {
-    if (selected.size === 0) return;
+    if (!hasPlane()) return;
     onStartGame([...selected]);
   });
 
@@ -91,10 +91,19 @@ export function initPicker(allCards, { onStartGame }) {
     updateSummary();
   }
 
+  // A deck of only Phenomena can never land on a plane, so the game
+  // would loop through "Resolve & Continue" forever.
+  function hasPlane() {
+    return allCards.some((c) => c.layout === "plane" && selected.has(c.id));
+  }
+
   function updateSummary() {
     selectionCountEl.textContent = selected.size;
-    startGameCountEl.textContent = `(${selected.size} card${selected.size === 1 ? "" : "s"})`;
-    startGameBtn.disabled = selected.size === 0;
+    const needsPlane = selected.size > 0 && !hasPlane();
+    startGameCountEl.textContent = needsPlane
+      ? "(add at least one Plane)"
+      : `(${selected.size} card${selected.size === 1 ? "" : "s"})`;
+    startGameBtn.disabled = selected.size === 0 || needsPlane;
   }
 
   function render() {

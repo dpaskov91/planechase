@@ -8,6 +8,8 @@ const KEYS = {
   deck: "planechase.deck.v1", // ordered ids: [0] is on top of the face-down deck
   current: "planechase.current.v1", // id of the active plane, or null
   history: "planechase.history.v1", // [{ id, name, at, trigger }]
+  pending: "planechase.pending.v1", // id of an unresolved Phenomenon, or null
+  rolls: "planechase.rolls.v1", // planar die rolls made so far this turn
 };
 
 function readJSON(key, fallback) {
@@ -37,6 +39,12 @@ export const store = {
   getCurrent: () => readJSON(KEYS.current, null),
   setCurrent: (id) => writeJSON(KEYS.current, id),
 
+  getPending: () => readJSON(KEYS.pending, null),
+  setPending: (id) => writeJSON(KEYS.pending, id),
+
+  getRolls: () => readJSON(KEYS.rolls, 0),
+  setRolls: (n) => writeJSON(KEYS.rolls, n),
+
   getHistory: () => readJSON(KEYS.history, []),
   setHistory: (entries) => writeJSON(KEYS.history, entries),
   pushHistory: (entry) => {
@@ -49,5 +57,7 @@ export const store = {
     writeJSON(KEYS.deck, []);
     writeJSON(KEYS.current, null);
     writeJSON(KEYS.history, []);
+    writeJSON(KEYS.pending, null);
+    writeJSON(KEYS.rolls, 0);
   },
 };

@@ -28,6 +28,8 @@ const OUTCOME_WEIGHTS = [
 ];
 
 const INITIAL_ROTATION = { x: -24, y: 35 };
+// Comfortably longer than the 1.1s CSS transition on .die-cube.
+const ROLL_FALLBACK_MS = 1600;
 
 function weightedOutcome() {
   const total = OUTCOME_WEIGHTS.reduce((sum, [, w]) => sum + w, 0);
@@ -74,13 +76,20 @@ export function createPlanarDie(cubeEl) {
     cubeEl.style.transform = `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
 
     return new Promise((resolve) => {
-      const onEnd = (e) => {
-        if (e.target !== cubeEl || e.propertyName !== "transform") return;
+      let fallback;
+      const finish = () => {
+        clearTimeout(fallback);
         cubeEl.removeEventListener("transitionend", onEnd);
         rolling = false;
         resolve({ outcome, face });
       };
+      const onEnd = (e) => {
+        if (e.target === cubeEl && e.propertyName === "transform") finish();
+      };
       cubeEl.addEventListener("transitionend", onEnd);
+      // transitionend isn't guaranteed (e.g. the tab was backgrounded
+      // mid-roll) — without this the die would stay locked for good.
+      fallback = setTimeout(finish, ROLL_FALLBACK_MS);
     });
   }
 

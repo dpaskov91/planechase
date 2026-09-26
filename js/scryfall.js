@@ -66,12 +66,13 @@ async function fetchAllPages() {
   return cards;
 }
 
-function readCache() {
+function readCache({ allowStale = false } = {}) {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed.fetchedAt || Date.now() - parsed.fetchedAt > CACHE_TTL_MS) return null;
+    const expired = !parsed.fetchedAt || Date.now() - parsed.fetchedAt > CACHE_TTL_MS;
+    if (expired && !allowStale) return null;
     if (!Array.isArray(parsed.cards) || parsed.cards.length === 0) return null;
     return parsed.cards;
   } catch {
@@ -102,15 +103,24 @@ export function getCustomCards() {
 /**
  * Loads every Planechase-format card, using a 7-day localStorage
  * cache to avoid re-fetching on every visit. Pass { force: true }
- * to bypass the cache.
+ * to bypass the cache. If Scryfall can't be reached, falls back to an
+ * expired cache (calling onStale) rather than failing outright.
  */
-export async function loadPlanechaseCards({ force = false } = {}) {
+export async function loadPlanechaseCards({ force = false, onStale } = {}) {
   if (!force) {
     const cached = readCache();
     if (cached) return [...cached, ...getCustomCards()];
   }
 
-  const raw = await fetchAllPages();
+  let raw;
+  try {
+    raw = await fetchAllPages();
+  } catch (err) {
+    const stale = readCache({ allowStale: true });
+    if (!stale) throw err;
+    onStale?.(err);
+    return [...stale, ...getCustomCards()];
+  }
   const normalized = raw.map(normalizeCard);
   writeCache(normalized);
   return [...normalized, ...getCustomCards()];

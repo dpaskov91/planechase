@@ -12,14 +12,20 @@ die — all in a static page hosted on GitHub Pages.
 - **Full card pool** — every Plane and Phenomenon card is loaded live from
   the [Scryfall API](https://scryfall.com/docs/api), so the pool stays
   correct as new sets release. Results are cached in `localStorage` for a
-  week to keep repeat visits fast.
+  week to keep repeat visits fast, and an expired cache is still used if
+  Scryfall can't be reached.
 - **Deck builder** — search, filter by set or card type, and pick exactly
   which planes are in play. Selections persist between visits.
 - **Game board** — shuffles your planar deck, tracks the face-down deck and
   face-up active plane, handles Phenomenon resolution (auto-continues to
-  the next Plane per the real rules), and keeps a visit history.
+  the next Plane per the real rules), and keeps a visit history. **Back**
+  undoes the last planeswalk. The whole game, including an unresolved
+  Phenomenon, survives a page reload.
 - **Animated planar die** — a real 3D CSS cube, correctly weighted (1 Chaos
   face, 2 Planeswalk faces, 3 blank faces) just like the physical die.
+  A roll-cost counter shows what the next roll costs this turn (free,
+  then {1}, {2}, …) with a **New turn** reset.
+- **How to Play** — the **?** button in the header opens a rules summary.
 - **No backend, no build step** — plain HTML/CSS/JS modules. Deploys as-is.
 
 ## Local development
@@ -47,6 +53,8 @@ js/
   game.js              Shuffle, planeswalk, phenomenon handling, history
   die.js                Planar die weighting + 3D roll animation
   lightbox.js          Shared full-card viewer
+  rules.js             "How to Play" rules modal
+  modal.js             Shared overlay behavior (close, Escape, focus handling)
   util.js               Small shared helpers (shuffle, dom, toast)
   main.js                Bootstraps everything, wires up view switching
 .github/workflows/deploy.yml   Deploys to GitHub Pages on push to main
@@ -64,7 +72,7 @@ js/
   indexes `layout:scheme` the same way).
 - **Game rules tweaks** — all planeswalk/phenomenon logic lives in
   `js/game.js` behind small, named functions (`planeswalk`,
-  `drawUntilPlane`, `continueThroughPhenomenon`).
+  `drawUntilPlane`, `continueThroughPhenomenon`, `stepBack`, `handleRoll`).
 
 ## One-time setup after pushing
 

@@ -1,14 +1,18 @@
 // Shared full-card viewer, used by both the deck builder grid and the
 // active-plane display so players can always read full oracle text.
+import { createModal } from "./modal.js?v=__CACHE_BUST__";
 
-const box = document.getElementById("card-lightbox");
 const img = document.getElementById("lightbox-img");
 const nameEl = document.getElementById("lightbox-name");
 const typeEl = document.getElementById("lightbox-type");
 const textEl = document.getElementById("lightbox-text");
 const setEl = document.getElementById("lightbox-set");
-const backdrop = document.getElementById("lightbox-backdrop");
-const closeBtn = document.getElementById("lightbox-close");
+
+const modal = createModal({
+  root: document.getElementById("card-lightbox"),
+  closeBtn: document.getElementById("lightbox-close"),
+  backdrop: document.getElementById("lightbox-backdrop"),
+});
 
 export function openLightbox(card) {
   img.src = card.imageLarge;
@@ -17,17 +21,5 @@ export function openLightbox(card) {
   typeEl.textContent = card.typeLine;
   textEl.textContent = card.oracleText;
   setEl.textContent = `${card.setName} (${card.set?.toUpperCase()})`;
-  box.hidden = false;
-  document.body.style.overflow = "hidden";
+  modal.open();
 }
-
-function close() {
-  box.hidden = true;
-  document.body.style.overflow = "";
-}
-
-backdrop.addEventListener("click", close);
-closeBtn.addEventListener("click", close);
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !box.hidden) close();
-});

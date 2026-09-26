@@ -8,6 +8,8 @@ const deckCountEl = document.getElementById("deck-count");
 const planeswalkBtn = document.getElementById("planeswalk-btn");
 const rollDieBtn = document.getElementById("roll-die-btn");
 const dieResultEl = document.getElementById("die-result");
+const rollCostEl = document.getElementById("roll-cost");
+const newTurnBtn = document.getElementById("new-turn-btn");
 const phenomenonAckBtn = document.getElementById("phenomenon-ack-btn");
 const backBtn = document.getElementById("back-btn");
 const historyBtn = document.getElementById("history-btn");
@@ -17,20 +19,43 @@ const historyList = document.getElementById("history-list");
 const newPoolBtn = document.getElementById("new-pool-btn");
 const resetGameBtn = document.getElementById("reset-game-btn");
 
+// Delay between a Planeswalk roll landing and actually moving, so the
+// player sees the result on the die before the card changes.
+const ROLL_PLANESWALK_DELAY_MS = 550;
+
 export function initGame(cardsById, { onEditPool }) {
   let deck = store.getDeck();
   let current = store.getCurrent();
-  let pendingPhenomenon = null;
+  // Persisted, not just in memory — otherwise reloading while a
+  // Phenomenon is showing lost that card and duplicated the plane
+  // that had already been moved to the bottom of the deck.
+  let pendingPhenomenon = cardsById.get(store.getPending()) || null;
+  if (pendingPhenomenon) current = null;
+  // Repair saves made before the Phenomenon was persisted: the active
+  // plane may also be sitting at the bottom of the deck.
+  if (current && deck.includes(current)) {
+    deck = deck.filter((id) => id !== current);
+    store.setDeck(deck);
+  }
+  let rollsThisTurn = store.getRolls();
   // One snapshot per planeswalk (manual or die-rolled), taken before
   // the deck/current change — however many phenomena get resolved
   // along the way to the next plane, it's still a single logical step
   // to undo. Session-only: a page reload starts a game with no undo.
   let undoStack = [];
+  // True from the moment a roll starts until any planeswalk it causes
+  // has happened — blocks every other deck-changing action meanwhile.
+  let busy = false;
+  // Bumped per game, so a delayed roll-planeswalk from a game that has
+  // since been restarted doesn't fire into the new one.
+  let gameToken = 0;
   const die = createPlanarDie(document.getElementById("die-cube"));
 
+  phenomenonAckBtn.hidden = !pendingPhenomenon;
   renderActivePlane();
   renderDeckCount();
   renderHistory();
+  renderRollCost();
   updateControls();
   preloadUpcomingPlanes();
 
@@ -38,20 +63,36 @@ export function initGame(cardsById, { onEditPool }) {
   rollDieBtn.addEventListener("click", () => handleRoll());
   phenomenonAckBtn.addEventListener("click", () => continueThroughPhenomenon());
   backBtn.addEventListener("click", () => stepBack());
+  newTurnBtn.addEventListener("click", () => setRolls(0));
   historyBtn.addEventListener("click", () => (historyPanel.hidden = false));
   historyCloseBtn.addEventListener("click", () => (historyPanel.hidden = true));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !historyPanel.hidden) historyPanel.hidden = true;
+  });
+  document.addEventListener("click", (e) => {
+    if (historyPanel.hidden) return;
+    if (historyPanel.contains(e.target) || historyBtn.contains(e.target)) return;
+    historyPanel.hidden = true;
+  });
   newPoolBtn.addEventListener("click", () => onEditPool());
   resetGameBtn.addEventListener("click", () => restartFromPool());
 
   function startNewGame(selectedIds) {
+    if (!selectedIds.some((id) => cardsById.get(id)?.layout === "plane")) {
+      toast("Your deck needs at least one Plane.");
+      onEditPool();
+      return;
+    }
+    gameToken++;
     deck = shuffle(selectedIds);
     current = null;
     store.setDeck(deck);
     store.setCurrent(null);
     store.setHistory([]);
-    pendingPhenomenon = null;
-    phenomenonAckBtn.hidden = true;
+    setPending(null);
     undoStack = [];
+    clearDieResult();
+    setRolls(0);
     renderHistory();
     drawUntilPlane({ initial: true });
   }
@@ -67,11 +108,14 @@ export function initGame(cardsById, { onEditPool }) {
     toast("Planar deck reshuffled.");
   }
 
-  function planeswalk() {
+  function planeswalk({ fromRoll = false } = {}) {
     if (deck.length === 0 && !current) {
       toast("Your deck is empty — edit your deck first.");
       return;
     }
+    // A roll-triggered planeswalk keeps its "Planeswalk!" text, since
+    // it still describes what just happened; a manual one clears it.
+    if (!fromRoll) clearDieResult();
     undoStack.push({ deck: deck.slice(), current, history: store.getHistory() });
     if (current) {
       deck.push(current);
@@ -85,12 +129,12 @@ export function initGame(cardsById, { onEditPool }) {
   // currently on — restoring the deck, active plane and history log to
   // exactly how they looked right before that step.
   function stepBack() {
-    if (undoStack.length === 0) return;
+    if (undoStack.length === 0 || busy) return;
     const snap = undoStack.pop();
     deck = snap.deck;
     current = snap.current;
-    pendingPhenomenon = null;
-    phenomenonAckBtn.hidden = true;
+    setPending(null);
+    clearDieResult();
     store.setDeck(deck);
     store.setCurrent(current);
     store.setHistory(snap.history);
@@ -118,9 +162,9 @@ export function initGame(cardsById, { onEditPool }) {
     }
 
     if (card.layout === "phenomenon") {
-      pendingPhenomenon = card;
-      phenomenonAckBtn.hidden = false;
+      setPending(card);
       logHistory(card, "phenomenon");
+      store.setCurrent(null);
       store.setDeck(deck);
       renderActivePlane();
       renderDeckCount();
@@ -139,6 +183,12 @@ export function initGame(cardsById, { onEditPool }) {
     updateControls();
     preloadUpcomingPlanes();
     scrollStageIntoView();
+  }
+
+  function setPending(card) {
+    pendingPhenomenon = card;
+    store.setPending(card ? card.id : null);
+    phenomenonAckBtn.hidden = !card;
   }
 
   // On cramped landscape phones, resolving a Phenomenon banner can
@@ -165,28 +215,63 @@ export function initGame(cardsById, { onEditPool }) {
 
   function continueThroughPhenomenon() {
     if (!pendingPhenomenon) return;
+    // Resolved Phenomena go to the bottom of the planar deck.
     deck.push(pendingPhenomenon.id);
-    pendingPhenomenon = null;
-    phenomenonAckBtn.hidden = true;
+    setPending(null);
     drawUntilPlane();
   }
 
   async function handleRoll() {
-    rollDieBtn.disabled = true;
-    dieResultEl.textContent = "";
-    dieResultEl.className = "die-result";
+    if (busy || !current) return;
+    busy = true;
+    const token = gameToken;
+    updateControls();
+    clearDieResult();
     const result = await die.roll();
-    if (!result) {
-      rollDieBtn.disabled = false;
+    if (!result || token !== gameToken) {
+      busy = false;
+      updateControls();
       return;
     }
+    setRolls(rollsThisTurn + 1);
     dieResultEl.textContent = OUTCOME_LABELS[result.outcome];
     dieResultEl.classList.add(result.outcome);
-    rollDieBtn.disabled = false;
 
-    if (result.outcome === "planeswalk") {
-      setTimeout(() => planeswalk(), 550);
+    if (result.outcome !== "planeswalk") {
+      busy = false;
+      updateControls();
+      return;
     }
+    setTimeout(() => {
+      busy = false;
+      if (token === gameToken) planeswalk({ fromRoll: true });
+      updateControls();
+    }, ROLL_PLANESWALK_DELAY_MS);
+  }
+
+  function clearDieResult() {
+    dieResultEl.textContent = "";
+    dieResultEl.className = "die-result";
+  }
+
+  // Paper rule: the active player may roll as often as they like on
+  // their turn — the first roll is free, each further roll that turn
+  // costs {1} more than the last. The app can't see turns, so the
+  // player taps "New turn" to reset the count.
+  function setRolls(n) {
+    rollsThisTurn = n;
+    store.setRolls(n);
+    renderRollCost();
+  }
+
+  function renderRollCost() {
+    rollCostEl.replaceChildren(
+      "Next roll: ",
+      rollsThisTurn === 0
+        ? el("strong", {}, "free")
+        : el("span", { class: "mana", title: `${rollsThisTurn} generic mana` }, String(rollsThisTurn))
+    );
+    newTurnBtn.disabled = rollsThisTurn === 0;
   }
 
   function logHistory(card, trigger) {
@@ -275,10 +360,11 @@ export function initGame(cardsById, { onEditPool }) {
     // Rule: rolling the planar die or manually planeswalking away is
     // only legal while an actual Plane is active — not while a
     // Phenomenon is sitting unresolved as the just-turned-up card.
-    const blocked = !!pendingPhenomenon;
+    // Also locked while a roll (and any planeswalk it causes) plays out.
+    const blocked = !!pendingPhenomenon || busy;
     planeswalkBtn.disabled = !hasDeck || blocked;
     rollDieBtn.disabled = !current || blocked;
-    backBtn.disabled = undoStack.length === 0;
+    backBtn.disabled = undoStack.length === 0 || busy;
   }
 
   return { startNewGame };

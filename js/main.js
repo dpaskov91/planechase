@@ -46,7 +46,9 @@ async function bootstrap() {
 
   let cards;
   try {
-    cards = await loadPlanechaseCards();
+    cards = await loadPlanechaseCards({
+      onStale: () => toast("Couldn't reach Scryfall — using your saved card data."),
+    });
   } catch (err) {
     console.error(err);
     setStatus(
